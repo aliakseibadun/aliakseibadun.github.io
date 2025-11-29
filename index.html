@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#C0C0C0">
+    <meta name="description" content="Календарь с выбором недель PWA">
+    <link rel="manifest" href="manifest.json">
+    <title>Календарь PWA</title>
+    <style>
+        body {
+            font-family: Arial;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10px;
+            background: #eee;
+            flex-shrink: 0;
+        }
+
+        header button {
+            background: #C0C0C0;
+            border: 2px solid #999;
+            color: black;
+            font-weight: bold;
+            padding: 12px 15px;
+            font-size: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            min-width: 60px;
+        }
+
+        #title {
+            font-size: 20px;
+            margin: 0 10px;
+            text-align: center;
+        }
+
+        #calendars {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .month {
+            margin-bottom: 20px;
+        }
+
+        .month h3 {
+            text-align: center;
+            margin: 0 0 10px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .weeknum {
+            font-weight: bold;
+            background: #f5f5f5;
+        }
+
+        .selected {
+            background: #cce5ff !important;
+        }
+
+        .today {
+            background: #ffebcc !important;
+        }
+
+        /* Нижняя навигация */
+        .bottom-nav {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 10px;
+            background: #eee;
+            border-top: 2px solid #ccc;
+            flex-shrink: 0;
+        }
+
+        .bottom-nav button {
+            background: #C0C0C0;
+            border: 2px solid #999;
+            color: black;
+            font-weight: bold;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            flex: 1;
+            margin: 0 5px;
+        }
+
+        /* Адаптивность для мобильных */
+        @media (max-width: 480px) {
+
+            header,
+            .bottom-nav {
+                padding: 10px 5px;
+            }
+
+            header button,
+            .bottom-nav button {
+                padding: 10px 8px;
+                font-size: 16px;
+            }
+
+            #title {
+                font-size: 18px;
+            }
+
+            th,
+            td {
+                padding: 6px 4px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <button onclick="prevMonth()">‹‹‹</button>
+        <h2 id="title"></h2>
+        <button onclick="nextMonth()">›››</button>
+    </header>
+
+    <div id="calendars"></div>
+
+    <div class="bottom-nav">
+        <button onclick="prevMonth()">Назад</button>
+        <button onclick="goToday()">Сегодня</button>
+        <button onclick="nextMonth()">Вперёд</button>
+    </div>
+
+    <script>
+        let current = new Date();
+        let selectedWeeks = JSON.parse(localStorage.getItem("weeks") || "{}");
+
+        function render() {
+            document.getElementById("title").innerText =
+                current.toLocaleString("ru", { month: "long", year: "numeric" });
+            let container = document.getElementById("calendars");
+            container.innerHTML = "";
+            for (let i = 0; i < 2; i++) {
+                let d = new Date(current.getFullYear(), current.getMonth() + i, 1);
+                container.innerHTML += makeCalendar(d);
+            }
+        }
+
+        function makeCalendar(date) {
+            let year = date.getFullYear(), month = date.getMonth();
+            let first = new Date(year, month, 1);
+            let last = new Date(year, month + 1, 0);
+
+            let html = `<div class='month'><h3>${date.toLocaleString("ru", { month: "long", year: "numeric" })}</h3>`;
+            html += "<table><tr><th>№</th><th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th>Сб</th><th>Вс</th></tr>";
+
+            let start = new Date(first);
+            start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+
+            let rowStart = new Date(start);
+            while (rowStart <= last) {
+                let weekNum = getWeekNumber(rowStart);
+                let key = year + "-" + month + "-" + weekNum;
+                let isSel = selectedWeeks[key];
+
+                html += `<tr class='${isSel ? "selected" : ""}' onclick='toggle("${key}")'>`;
+                html += `<td class='weeknum'>${weekNum}</td>`;
+                for (let d = 0; d < 7; d++) {
+                    let day = new Date(rowStart);
+                    day.setDate(rowStart.getDate() + d);
+                    let cls = "";
+                    let today = new Date();
+                    if (day.toDateString() == today.toDateString()) cls = "today";
+                    html += `<td class='${cls}'>${day.getMonth() == month ? day.getDate() : ""}</td>`;
+                }
+                html += "</tr>";
+                rowStart.setDate(rowStart.getDate() + 7);
+            }
+
+            html += "</table></div>";
+            return html;
+        }
+
+        function getWeekNumber(d) {
+            let temp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            let dayNum = temp.getUTCDay() || 7;
+            temp.setUTCDate(temp.getUTCDate() + 4 - dayNum);
+            let yearStart = new Date(Date.UTC(temp.getUTCFullYear(), 0, 1));
+            return Math.ceil((((temp - yearStart) / 86400000) + 1) / 7);
+        }
+
+        function toggle(k) {
+            selectedWeeks[k] = !selectedWeeks[k];
+            localStorage.setItem("weeks", JSON.stringify(selectedWeeks));
+            render();
+        }
+
+        function prevMonth() {
+            current.setMonth(current.getMonth() - 1);
+            render();
+        }
+
+        function nextMonth() {
+            current.setMonth(current.getMonth() + 1);
+            render();
+        }
+
+        function goToday() {
+            current = new Date();
+            render();
+        }
+
+        // PWA Installation
+        window.addEventListener('load', () => {
+            render();
+
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(registration => console.log('SW registered'))
+                    .catch(err => console.log('SW registration failed'));
+            }
+        });
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+
+            // Можно показать кнопку установки
+            setTimeout(() => {
+                if (deferredPrompt && confirm('Установить приложение на устройство?')) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        deferredPrompt = null;
+                    });
+                }
+            }, 3000);
+        });
+    </script>
+</body>
+
+</html>
