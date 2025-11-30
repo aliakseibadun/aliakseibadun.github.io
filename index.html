@@ -73,9 +73,13 @@
         }
 
         .weeknum {
-            font-weight: bold;
-            background: #f5f5f5;
+            background: #f5f5f5 !important;
         }
+
+        .selected .weeknum {
+            background: #cce5ff !important;
+        }
+
 
         .selected {
             background: #cce5ff !important;
@@ -129,6 +133,15 @@
             td {
                 padding: 6px 4px;
                 font-size: 14px;
+            }
+
+            th:nth-child(8),
+            td:nth-child(8) {
+                color: red;
+            }
+
+            .weeknum {
+                font-weight: bold;
             }
         }
     </style>
