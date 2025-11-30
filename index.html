@@ -278,13 +278,18 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
+            console.log('✅ Install prompt available');
 
-            // Можно показать кнопку установки
+            // Убираем confirm - сразу показываем установку
             setTimeout(() => {
-                if (deferredPrompt && confirm('Установить приложение на устройство?')) {
+                if (deferredPrompt) {
+                    console.log('✅ Showing install prompt');
                     deferredPrompt.prompt();
                     deferredPrompt.userChoice.then((choiceResult) => {
+                        console.log('User choice:', choiceResult.outcome);
                         deferredPrompt = null;
+                    }).catch(error => {
+                        console.error('Install error:', error);
                     });
                 }
             }, 3000);
