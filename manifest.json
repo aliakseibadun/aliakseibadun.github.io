@@ -1,6 +1,6 @@
 {
     "name": "Календарь PWA",
-    "short_name": "Календарь",
+    "short_name": "График вахт",
     "description": "Календарь с выбором недель",
     "start_url": "./",
     "display": "standalone",
