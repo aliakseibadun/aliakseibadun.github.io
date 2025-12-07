@@ -214,7 +214,8 @@
             let rowStart = new Date(start);
             while (rowStart <= last) {
                 let weekNum = getWeekNumber(rowStart);
-                let key = year + "-" + month + "-" + weekNum;
+                let weekYear = getWeekYear(rowStart);
+                let key = weekYear + "-" + weekNum;
                 let isSel = selectedWeeks[key];
 
                 html += `<tr class='${isSel ? "selected" : ""}' onclick='toggle("${key}")'>`;
@@ -242,6 +243,13 @@
             let yearStart = new Date(Date.UTC(temp.getUTCFullYear(), 0, 1));
             return Math.ceil((((temp - yearStart) / 86400000) + 1) / 7);
         }
+        function getWeekYear(d) {
+            let temp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            let dayNum = temp.getUTCDay() || 7;
+            temp.setUTCDate(temp.getUTCDate() + 4 - dayNum);
+            return temp.getUTCFullYear();
+        }
+
 
         function toggle(k) {
             selectedWeeks[k] = !selectedWeeks[k];
