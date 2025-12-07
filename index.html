@@ -282,24 +282,57 @@
                     .catch(err => console.log('SW registration failed'));
             }
         });
-        let deferredPrompt;
 
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); // отменяем стандартное поведение
+    </script>
+    <script>
+        let deferredPrompt = null;
+
+        window.addEventListener("beforeinstallprompt", (e) => {
+            e.preventDefault();
             deferredPrompt = e;
-            console.log('✅ PWA install prompt available');
 
-            setTimeout(() => {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then((choiceResult) => {
-                        console.log('User choice:', choiceResult.outcome);
-                        deferredPrompt = null;
-                    }).catch(error => console.error('Install error:', error));
-                }
-            }, 3000);
+            const banner = document.createElement("div");
+            banner.id = "pwa-install-banner";
+            banner.style.cssText = `
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #fff;
+        padding: 12px;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 9999;
+        font-family: sans-serif;
+    `;
+
+            banner.innerHTML = `
+        <span>Установить приложение?</span>
+        <button id="pwa-install-btn" style="
+            background:#007bff;
+            color:#fff;
+            border:none;
+            padding:8px 12px;
+            border-radius:6px;
+        ">
+            Установить
+        </button>
+    `;
+
+            document.body.appendChild(banner);
+
+            document.getElementById("pwa-install-btn").addEventListener("click", async () => {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                banner.remove();
+            });
         });
     </script>
+
 </body>
 
 </html>
