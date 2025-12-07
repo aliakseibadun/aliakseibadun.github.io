@@ -282,24 +282,20 @@
                     .catch(err => console.log('SW registration failed'));
             }
         });
-
         let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            console.log('✅ Install prompt available');
 
-            // Убираем confirm - сразу показываем установку
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); // отменяем стандартное поведение
+            deferredPrompt = e;
+            console.log('✅ PWA install prompt available');
+
             setTimeout(() => {
                 if (deferredPrompt) {
-                    console.log('✅ Showing install prompt');
                     deferredPrompt.prompt();
                     deferredPrompt.userChoice.then((choiceResult) => {
                         console.log('User choice:', choiceResult.outcome);
                         deferredPrompt = null;
-                    }).catch(error => {
-                        console.error('Install error:', error);
-                    });
+                    }).catch(error => console.error('Install error:', error));
                 }
             }, 3000);
         });
